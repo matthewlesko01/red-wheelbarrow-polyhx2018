@@ -10,13 +10,17 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
+import org.w3c.dom.Text;
+
 
 public class MainActivity extends AppCompatActivity  implements SensorEventListener{
 
-    private float floatX, floatY, floatZ;
+    private float lastX, lastY, lastZ;
 
     private SensorManager sensorManager;
     private Sensor accelerometer;
+
+    private float attractionForce = (float) 9.82; // Earth's Attraction Force
 
     private float deltaXMax = 0;
     private float deltaYMax = 0;
@@ -26,8 +30,11 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private float deltaY = 0;
     private float deltaZ = 0;
 
+    private float deltaAccelMag = 0;
+    private float deltaImpactG  = 0;
+
     private TextView currentX, currentY, currentZ, maxX, maxY, maxZ;
-    private TextView accel_mag_text, impact_g_text;
+    private TextView accelMag, impactG;
 
 
 
@@ -51,6 +58,9 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     }
 
     public void initializeViews() { //GUI Init
+        accelMag = (TextView) findViewById(R.id.accel_mag_text);
+        impactG  = (TextView) findViewById(R.id.impact_g_text);
+
         currentX = (TextView) findViewById(R.id.currentX);
         currentY = (TextView) findViewById(R.id.currentY);
         currentZ = (TextView) findViewById(R.id.currentZ);
@@ -82,18 +92,21 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         displayMaxValues();
 
         // get the change of the x,y,z values of the accelerometer
-        deltaX = Math.abs(lastX - event.values[0]);
-        deltaY = Math.abs(lastY - event.values[1]);
-        deltaZ = Math.abs(lastZ - event.values[2]);
+        deltaX = Math.abs(lastX - sensorEvent.values[0]);
+        deltaY = Math.abs(lastY - sensorEvent.values[1]);
+        deltaZ = Math.abs(lastZ - sensorEvent.values[2]);
+
+        deltaAccelMag = (float) Math.sqrt( deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+        deltaImpactG = deltaAccelMag / attractionForce;
 
         // if the change is below 2, it is just plain noise
-        if (deltaX < 2)
-            deltaX = 0;
-        if (deltaY < 2)
-            deltaY = 0;
-        if (deltaZ  vibrateThreshold) || (deltaY > vibrateThreshold) || (deltaZ > vibrateThreshold)) {
-            v.vibrate(50);
-        }
+//        if (deltaX < 2)
+//            deltaX = 0;
+//        if (deltaY < 2)
+//            deltaY = 0;
+//        if (deltaZ  vibrateThreshold) || (deltaY > vibrateThreshold) || (deltaZ > vibrateThreshold)) {
+//            v.vibrate(50);
+//        }
 
     }
 
@@ -104,6 +117,9 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     // Clean display values
     public void displayCleanValues() {
+        accelMag.setText("0.0");
+        impactG.setText("0.0");
+
         currentX.setText("0.0");
         currentY.setText("0.0");
         currentZ.setText("0.0");
@@ -111,6 +127,9 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     // display the current x,y,z accelerometer values
     public void displayCurrentValues() {
+        accelMag.setText(Float.toString(deltaAccelMag));
+        impactG.setText(Float.toString(deltaImpactG));
+
         currentX.setText(Float.toString(deltaX));
         currentY.setText(Float.toString(deltaY));
         currentZ.setText(Float.toString(deltaZ));
