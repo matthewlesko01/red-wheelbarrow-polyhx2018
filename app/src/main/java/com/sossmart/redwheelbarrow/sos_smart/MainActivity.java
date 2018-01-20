@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     }
 
+    // Clean display values
     public void displayCleanValues() {
         currentX.setText("0.0");
         currentY.setText("0.0");
