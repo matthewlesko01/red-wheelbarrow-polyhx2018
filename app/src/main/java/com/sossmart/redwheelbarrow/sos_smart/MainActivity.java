@@ -77,6 +77,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private static String trustedNumber;
     private static String emergencyMessage;
     private static SharedPreferences settings;
+    private static Button mapsButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,14 +97,15 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             // fail! we dont have an accelerometer!
         }
 
-        // Ask for permission to send and receive sms
-        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS}, 1);
+        // Ask for permission to send and receive sms and access location
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
         // Restore settings for trusted contact and emergency message
         updateSettings();
 
         // This is for the button to change to the SMS activity
         smsButton = (Button) findViewById(R.id.smsButton);
+        mapsButton = (Button) findViewById(R.id.mapsButton);
 
         // Capture button clicks
         smsButton.setOnClickListener(new View.OnClickListener() {
@@ -111,6 +113,13 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             public void onClick(View view) {
                 Intent smsIntent = new Intent(MainActivity.this, SMS.class);
                 startActivity(smsIntent);
+            }
+        });
+        mapsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent mapsIntent = new Intent(MainActivity.this, MapsActivity.class);
+                startActivity(mapsIntent);
             }
         });
 
@@ -130,19 +139,12 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    // permission was granted, yay! Do the
-                    // contacts-related task you need to do.
                 } else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
                     Toast.makeText(MainActivity.this, "Permission denied to send SMS messages", Toast.LENGTH_SHORT).show();
                 }
                 return;
             }
         }
-
     }
 
     private void updateSettings() {
@@ -283,7 +285,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     {
         updateSettings();
         PendingIntent pi = PendingIntent.getActivity(this, 0,
-                new Intent(this, SMS.class), 0);
+                new Intent(this, MainActivity.class), 0);
         SmsManager sms = SmsManager.getDefault();
         sms.sendTextMessage(phoneNumber, null, message, pi, null);
     }
