@@ -1,9 +1,12 @@
 package com.sossmart.redwheelbarrow.sos_smart;
 
+import android.graphics.Color;
+import android.os.CountDownTimer;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.app.Activity;
 import android.content.Context;
+import android.widget.Button;
 import android.widget.TextView;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -21,6 +24,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private Sensor accelerometer;
 
     private float attractionForce = (float) 9.82; // Earth's Attraction Force
+    private int thresholdG = 8;
 
     private float deltaXMax = 0;
     private float deltaYMax = 0;
@@ -32,9 +36,14 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     private float deltaAccelMag = 0;
     private float deltaImpactG  = 0;
+    private float previousDeltaAccelMag = 0;
+    private float decelerationVelocity = 0;
+    boolean deceleration = false;
 
     private TextView currentX, currentY, currentZ, maxX, maxY, maxZ;
     private TextView accelMag, impactG;
+
+    Button btn;
 
 
 
@@ -68,6 +77,8 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         maxX = (TextView) findViewById(R.id.maxX);
         maxY = (TextView) findViewById(R.id.maxY);
         maxZ = (TextView) findViewById(R.id.maxZ);
+
+        btn = (Button) findViewById(R.id.btn);
     }
 
     //onResume() register the accelerometer for listening the events
@@ -96,6 +107,25 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         deltaY = Math.abs(lastY - sensorEvent.values[1]);
         deltaZ = Math.abs(lastZ - sensorEvent.values[2]);
 
+        // alpha is calculated as t / (t + dT)
+        // with t, the low-pass filter's time-constant
+        // and dT, the event delivery rate
+
+        final float alpha = (float) 0.8;
+        float[] gravity = new float[3];
+
+//        gravity[0] = alpha * gravity[0] + (1 - alpha) * sensorEvent.values[0];
+//        gravity[1] = alpha * gravity[1] + (1 - alpha) * sensorEvent.values[1];
+//        gravity[2] = alpha * gravity[2] + (1 - alpha) * sensorEvent.values[2];
+//
+//        deltaX = sensorEvent.values[0] - gravity[0];
+//        deltaY = sensorEvent.values[1] - gravity[1];
+//        deltaZ = sensorEvent.values[2] - gravity[2];
+//
+//        deltaX = (lastX - sensorEvent.values[0]);
+//        deltaY = (lastY - sensorEvent.values[1]);
+//        deltaZ = (lastZ - sensorEvent.values[2]);
+
         deltaAccelMag = (float) Math.sqrt( deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
         deltaImpactG = deltaAccelMag / attractionForce;
 
@@ -108,12 +138,48 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 //            v.vibrate(50);
 //        }
 
+        decelerationVelocity = previousDeltaAccelMag - deltaAccelMag;
+        if (Math.abs(decelerationVelocity) < 1 && decelerationVelocity < 0){
+            deceleration = true;
+        }
+
+        // In an event of a crash:
+        if(deltaImpactG > thresholdG && deceleration == true){ // If G is above threshold and in deceleration
+
+            btn.setBackgroundColor(Color.GREEN); // Troubleshooting purposes
+
+            // Start timer
+            timerNotification(); // Send SMS if time runs out without any user interactions
+
+            // Resets deceleration
+            deceleration = false;
+        }
+
+
+        previousDeltaAccelMag = deltaAccelMag;
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int i) {
 
     }
+
+    public void timerNotification(){
+        new CountDownTimer(30000, 1000) {  // Counting down to 30 000ms with intervals of 1 000ms
+
+            public void onTick(long millisUntilFinished) {
+                // Ask user if he/she is okay
+                // If answer, cancel timer
+                cancel();
+            }
+
+            public void onFinish() {
+                // Send SMS if no answers
+            }
+        }.start();
+
+    }
+
 
     // Clean display values
     public void displayCleanValues() {
