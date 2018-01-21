@@ -1,6 +1,8 @@
 package com.sossmart.redwheelbarrow.sos_smart;
 
 import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
@@ -14,6 +16,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsManager;
 import android.view.View;
@@ -55,7 +58,16 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     Button btn;
     private Button smsButton;
 
-    private NotificationDecision notificationDecision;
+    //private NotificationDecision notificationDecision;
+
+    private static final int NOTIFY_ID = 100;
+    private static final String YES_ACTION = "com.sossmart.redwheelbarrow.sos_smart.YES_ACTION";
+    private static final String MAYBE_ACTION = "com.sossmart.redwheelbarrow.sos_smart.MAYBE_ACTION";
+    private static final String NO_ACTION = "com.sossmart.redwheelbarrow.sos_smart.NO_ACTION";
+
+    private NotificationManager notificationManager;
+
+    private boolean cancelTime = false;
 
     // Shared Preferences Settings
     public static final String PREFS_NAME = "EmergencySettings";
@@ -102,7 +114,12 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         });
 
 
-        notificationDecision = new NotificationDecision();
+        //notificationDecision = new NotificationDecision();
+
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        processIntentAction(getIntent());
+        getSupportActionBar().hide();
     }
 
     @Override
@@ -240,10 +257,14 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                 // Ask user if he/she is okay
                 //notificationDecision.showActionButtonsNotification();
                 showToast("Count down..." + millisUntilFinished);
-                //showActionButtonsNotification();
+                showActionButtonsNotification();
+
+                //notificationStart();
 
                 // If answer, cancel timer
-                //cancel();
+                if (cancelTime){
+                    cancel();
+                }
             }
 
             public void onFinish() {
@@ -253,6 +274,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             }
         }.start();
 
+        cancelTime = false;
     }
 
     public void sendSMS(String phoneNumber, String message)
@@ -264,6 +286,72 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         sms.sendTextMessage(phoneNumber, null, message, pi, null);
     }
 
+    private Intent getNotificationIntent() {
+        Intent intent = new Intent(MainActivity.this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        return intent;
+    }
+
+    private void showActionButtonsNotification() {
+        Intent yesIntent = getNotificationIntent();
+        yesIntent.setAction(YES_ACTION);
+
+        Intent maybeIntent = getNotificationIntent();
+        maybeIntent.setAction(MAYBE_ACTION);
+
+        Intent noIntent = getNotificationIntent();
+        noIntent.setAction(NO_ACTION);
+
+        Notification mBuilder =
+                new NotificationCompat.Builder(MainActivity.this)
+                        .setContentIntent(PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT))
+                        .setSmallIcon(R.mipmap.ic_launcher)
+                        .setTicker("Action Buttons Notification Received")
+                        .setContentTitle("SOS Smart")
+                        .setContentText("Are you okay?")
+                        .setWhen(System.currentTimeMillis())
+                        .setAutoCancel(true)
+                        .addAction(new NotificationCompat.Action(
+                                R.mipmap.ic_thumb_up_black_36dp,
+                                getString(R.string.yes),
+                                PendingIntent.getActivity(this, 0, yesIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
+                        .addAction(new NotificationCompat.Action(
+                                R.mipmap.ic_thumbs_up_down_black_36dp,
+                                getString(R.string.maybe),
+                                PendingIntent.getActivity(this, 0, maybeIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
+                        .addAction(new NotificationCompat.Action(
+                                R.mipmap.ic_thumb_down_black_36dp,
+                                getString(R.string.no),
+                                PendingIntent.getActivity(this, 0, noIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
+                        .build();
+
+        notificationManager.notify(NOTIFY_ID, mBuilder);
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        processIntentAction(intent);
+        super.onNewIntent(intent);
+    }
+
+    private void processIntentAction(Intent intent) {
+        if (intent.getAction() != null) {
+            switch (intent.getAction()) {
+                case YES_ACTION:
+                    Toast.makeText(this, "Yes :)", Toast.LENGTH_SHORT).show();
+                    cancelTime = true;
+                    break;
+                case MAYBE_ACTION:
+                    Toast.makeText(this, "Maybe :|", Toast.LENGTH_SHORT).show();
+                    cancelTime = true;
+                    break;
+                case NO_ACTION:
+                    Toast.makeText(this, "No :(", Toast.LENGTH_SHORT).show();
+                    cancelTime = true;
+                    break;
+            }
+        }
+    }
 
     // Clean display values
     public void displayCleanValues() {

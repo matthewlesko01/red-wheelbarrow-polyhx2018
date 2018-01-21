@@ -1,49 +1,49 @@
-package com.sossmart.redwheelbarrow.sos_smart;
-
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
-import android.support.v4.app.NotificationCompat.Action;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.NotificationCompat;
-import android.widget.Toast;
-
-public class NotificationDecision  {
-
-    // Notification parameters
-    private static final int NOTIFY_ID = 100;
-    private static final String YES_ACTION = "com.sossmart.redwheelbarrow.sos_smart.YES_ACTION";
-    private static final String MAYBE_ACTION = "com.sossmart.redwheelbarrow.sos_smart.MAYBE_ACTION";
-    private static final String NO_ACTION = "com.sossmart.redwheelbarrow.sos_smart.NO_ACTION";
-
-    private NotificationManager notificationManager;
-
-    private MainActivity mainActivity;
-
-//    @Override
-//    protected void onCreate(Bundle savedInstanceState) {
-//        super.onCreate(savedInstanceState);
-////        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//package com.sossmart.redwheelbarrow.sos_smart;
+//
+//import android.app.Notification;
+//import android.app.NotificationManager;
+//import android.app.PendingIntent;
+//import android.content.Context;
+//import android.content.Intent;
+//import android.os.Bundle;
+//import android.support.v4.app.NotificationCompat.Action;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.app.NotificationCompat;
+//import android.widget.Toast;
+//
+//public class NotificationDecision {
+//
+//    // Notification parameters
+//    private static final int NOTIFY_ID = 100;
+//    private static final String YES_ACTION = "com.sossmart.redwheelbarrow.sos_smart.YES_ACTION";
+//    private static final String MAYBE_ACTION = "com.sossmart.redwheelbarrow.sos_smart.MAYBE_ACTION";
+//    private static final String NO_ACTION = "com.sossmart.redwheelbarrow.sos_smart.NO_ACTION";
+//
+//    private NotificationManager notificationManager;
+//
+//    private MainActivity mainActivity;
+//
+////    @Override
+////    protected void onCreate(Bundle savedInstanceState) {
+////        super.onCreate(savedInstanceState);
+//////        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+//////
+//////        processIntentAction(getIntent());
+//////        getSupportActionBar().hide();
+////    }
 ////
-////        processIntentAction(getIntent());
-////        getSupportActionBar().hide();
-//    }
-
-    public void notificationStart(){
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.mipmap.ic_launcher)
-                        .setContentTitle("My notification")
-                        .setContentText("Hello World!");
-    }
-
-
+////    public void notificationStart() {
+////        NotificationCompat.Builder mBuilder =
+////                new NotificationCompat.Builder(mainActivity)
+////                        .setSmallIcon(R.mipmap.ic_launcher)
+////                        .setContentTitle("My notification")
+////                        .setContentText("Hello World!");
+////    }
+//
+//
 //    private Intent getNotificationIntent() {
 //        mainActivity = new MainActivity();
-//        Intent intent = new Intent(NotificationDecision.this, MainActivity.class);
+//        Intent intent = new Intent(mainActivity, NotificationDecision.class);
 //        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 //        return intent;
 //    }
@@ -58,7 +58,7 @@ public class NotificationDecision  {
 //        Intent noIntent = getNotificationIntent();
 //        noIntent.setAction(NO_ACTION);
 //
-//        Notification notification = new NotificationCompat.Builder(this)
+//        Notification notification = new NotificationCompat.Builder(mainActivity)
 //                .setContentIntent(PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT))
 //                .setSmallIcon(R.mipmap.ic_launcher)
 //                .setTicker("Action Buttons Notification Received")
@@ -104,4 +104,4 @@ public class NotificationDecision  {
 //            }
 //        }
 //    }
-}
+//}
