@@ -13,6 +13,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.app.ActivityCompat;
@@ -23,11 +24,12 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.location.LocationManager;
 
 import java.io.FileOutputStream;
 
 
-public class MainActivity extends AppCompatActivity  implements SensorEventListener{
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private float lastX, lastY, lastZ;
 
@@ -46,7 +48,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private float deltaZ = 0;
 
     private float deltaAccelMag = 0;
-    private float deltaImpactG  = 0;
+    private float deltaImpactG = 0;
     private float previousDeltaAccelMag = 0;
     private float decelerationVelocity = 0;
     boolean deceleration = false;
@@ -79,6 +81,11 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private static SharedPreferences settings;
     private static Button mapsButton;
 
+    // GPS Location Variables
+    private GPSService myGPS;
+    public double longitude = 0;
+    public double latitude = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -96,6 +103,9 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         } else {
             // fail! we dont have an accelerometer!
         }
+
+        myGPS = new GPSService();
+
 
         // Ask for permission to send and receive sms and access location
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_FINE_LOCATION}, 1);
@@ -156,7 +166,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     public void initializeViews() { //GUI Init
         accelMag = (TextView) findViewById(R.id.accel_mag_text);
-        impactG  = (TextView) findViewById(R.id.impact_g_text);
+        impactG = (TextView) findViewById(R.id.impact_g_text);
 
         currentX = (TextView) findViewById(R.id.currentX);
         currentY = (TextView) findViewById(R.id.currentY);
@@ -214,7 +224,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 //        deltaY = (lastY - sensorEvent.values[1]);
 //        deltaZ = (lastZ - sensorEvent.values[2]);
 
-        deltaAccelMag = (float) Math.sqrt( deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
+        deltaAccelMag = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
         deltaImpactG = deltaAccelMag / attractionForce;
 
         // if the change is below 2, it is just plain noise
@@ -227,12 +237,12 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 //        }
 
         decelerationVelocity = previousDeltaAccelMag - deltaAccelMag;
-        if (Math.abs(decelerationVelocity) < 1 && decelerationVelocity < 0){
+        if (Math.abs(decelerationVelocity) < 1 && decelerationVelocity < 0) {
             deceleration = true;
         }
 
         // In an event of a crash:
-        if(deltaImpactG > thresholdG && deceleration == true){ // If G is above threshold and in deceleration
+        if (deltaImpactG > thresholdG && deceleration == true) { // If G is above threshold and in deceleration
 
             btn.setBackgroundColor(Color.GREEN); // Troubleshooting purposes
 
@@ -264,7 +274,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                 showActionButtonsNotification(timeRemaining);
 
                 // If answer, cancel timer
-                if (cancelTime){
+                if (cancelTime) {
                     notificationManager.cancel(100);
                     cancel();
                 }
@@ -273,6 +283,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             public void onFinish() {
                 // Send SMS if no answers
                 //showToast("BOOOOM!");
+                //getCurrentLocation();
                 sendSMS(trustedNumber, emergencyMessage);
             }
         }.start();
@@ -281,8 +292,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     }
 
-    public void sendSMS(String phoneNumber, String message)
-    {
+    public void sendSMS(String phoneNumber, String message) {
         updateSettings();
         PendingIntent pi = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), 0);
@@ -317,7 +327,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                         .setPriority(2) // Max = 2, Min = -2
                         .setVisibility(1) // 1 = public
                         .setAutoCancel(true)
-                        .setFullScreenIntent (PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT), true)
+                        .setFullScreenIntent(PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT), true)
                         .addAction(new NotificationCompat.Action(
                                 R.mipmap.ic_thumb_up_black_36dp,
                                 getString(R.string.yes),
