@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">SOS_Smart</string>
     <string name="title_activity_sms">SMS</string>
+    <string name="yes">I am alive!</string>
+    <string name="maybe">I am alright but I need help</string>
+    <string name="no">No I am dying...</string>
 </resources>
