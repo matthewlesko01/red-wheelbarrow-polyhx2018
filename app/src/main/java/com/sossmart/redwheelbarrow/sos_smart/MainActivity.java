@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         updateSettings();
 
         // This is for the button to change to the SMS activity
-        smsButton = (Button) findViewById(R.id.smsButton);
+        smsButton = (Button) findViewById(R.id.buttonTrustedContacts);
         mapsButton = (Button) findViewById(R.id.mapsButton);
 
         // Capture button clicks
@@ -155,8 +155,8 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     }
 
     public void initializeViews() { //GUI Init
-        accelMag = (TextView) findViewById(R.id.accel_mag_text);
-        impactG  = (TextView) findViewById(R.id.impact_g_text);
+        accelMag = (TextView) findViewById(R.id.textAccMag);
+        impactG  = (TextView) findViewById(R.id.valImpact);
 
         currentX = (TextView) findViewById(R.id.currentX);
         currentY = (TextView) findViewById(R.id.currentY);
@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         maxY = (TextView) findViewById(R.id.maxY);
         maxZ = (TextView) findViewById(R.id.maxZ);
 
-        btn = (Button) findViewById(R.id.btn);
+        btn = (Button) findViewById(R.id.bigRedBanner);
     }
 
     //onResume() register the accelerometer for listening the events
