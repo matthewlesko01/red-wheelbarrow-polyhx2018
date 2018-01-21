@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private NotificationManager notificationManager;
 
     private boolean cancelTime = false;
+    private int timeRemaining = 0;
 
     // Shared Preferences Settings
     public static final String PREFS_NAME = "EmergencySettings";
@@ -256,25 +257,26 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             public void onTick(long millisUntilFinished) {
                 // Ask user if he/she is okay
                 //notificationDecision.showActionButtonsNotification();
-                showToast("Count down..." + millisUntilFinished);
-                showActionButtonsNotification();
-
-                //notificationStart();
+                //showToast("Count down..." + millisUntilFinished);
+                timeRemaining = (int) millisUntilFinished / 1000;
+                showActionButtonsNotification(timeRemaining);
 
                 // If answer, cancel timer
                 if (cancelTime){
+                    notificationManager.cancel(100);
                     cancel();
                 }
             }
 
             public void onFinish() {
                 // Send SMS if no answers
-                showToast("BOOOOM!");
+                //showToast("BOOOOM!");
                 sendSMS(trustedNumber, emergencyMessage);
             }
         }.start();
 
         cancelTime = false;
+
     }
 
     public void sendSMS(String phoneNumber, String message)
@@ -292,7 +294,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         return intent;
     }
 
-    private void showActionButtonsNotification() {
+    private void showActionButtonsNotification(int timeRemaining) {
         Intent yesIntent = getNotificationIntent();
         yesIntent.setAction(YES_ACTION);
 
@@ -307,22 +309,25 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                         .setContentIntent(PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT))
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setTicker("Action Buttons Notification Received")
-                        .setContentTitle("SOS Smart")
-                        .setContentText("Are you okay?")
+                        .setContentTitle("Are you okay?")
+                        .setContentText("Sending SOS message in: " + timeRemaining)
                         .setWhen(System.currentTimeMillis())
+                        .setPriority(2) // Max = 2, Min = -2
+                        .setVisibility(1) // 1 = public
                         .setAutoCancel(true)
+                        .setFullScreenIntent (PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT), true)
                         .addAction(new NotificationCompat.Action(
                                 R.mipmap.ic_thumb_up_black_36dp,
                                 getString(R.string.yes),
                                 PendingIntent.getActivity(this, 0, yesIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
-                        .addAction(new NotificationCompat.Action(
-                                R.mipmap.ic_thumbs_up_down_black_36dp,
-                                getString(R.string.maybe),
-                                PendingIntent.getActivity(this, 0, maybeIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
-                        .addAction(new NotificationCompat.Action(
-                                R.mipmap.ic_thumb_down_black_36dp,
-                                getString(R.string.no),
-                                PendingIntent.getActivity(this, 0, noIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
+//                        .addAction(new NotificationCompat.Action(
+//                                R.mipmap.ic_thumbs_up_down_black_36dp,
+//                                getString(R.string.maybe),
+//                                PendingIntent.getActivity(this, 0, maybeIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
+//                        .addAction(new NotificationCompat.Action(
+//                                R.mipmap.ic_thumb_down_black_36dp,
+//                                getString(R.string.no),
+//                                PendingIntent.getActivity(this, 0, noIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
                         .build();
 
         notificationManager.notify(NOTIFY_ID, mBuilder);
@@ -338,7 +343,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
         if (intent.getAction() != null) {
             switch (intent.getAction()) {
                 case YES_ACTION:
-                    Toast.makeText(this, "Yes :)", Toast.LENGTH_SHORT).show();
+                    //Toast.makeText(this, "Yes :)", Toast.LENGTH_SHORT).show();
                     cancelTime = true;
                     break;
                 case MAYBE_ACTION:
