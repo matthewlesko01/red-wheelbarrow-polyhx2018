@@ -231,8 +231,6 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     public void timerNotification() {
 
-
-
         new CountDownTimer(30000, 1000) {  // Counting down to 30 000ms with intervals of 1 000ms
 
             public void onTick(long millisUntilFinished) {
