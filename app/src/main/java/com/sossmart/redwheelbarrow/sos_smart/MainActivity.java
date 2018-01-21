@@ -3,6 +3,7 @@ package com.sossmart.redwheelbarrow.sos_smart;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.hardware.Sensor;
@@ -13,6 +14,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -28,6 +30,8 @@ import android.support.v7.app.NotificationCompat;
 import android.widget.Toast;
 
 import org.w3c.dom.Text;
+
+import java.io.FileOutputStream;
 
 
 public class MainActivity extends AppCompatActivity  implements SensorEventListener{
@@ -69,6 +73,13 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
     private NotificationManager notificationManager;
 
+    // Shared Preferences Settings
+    public static final String PREFS_NAME = "EmergencySettings";
+    private final String defaultTrustedNumber = "5148315762";
+    private final String defaultEmergencyMessage = "HELP! I just got into a car crash!";
+    private static String trustedNumber;
+    private static String emergencyMessage;
+    private static SharedPreferences settings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +101,9 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
         // Ask for permission to send and receive sms
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS}, 1);
+
+        // Restore settings for trusted contact and emergency message
+        updateSettings();
 
         // This is for the button to change to the SMS activity
         smsButton = (Button) findViewById(R.id.smsButton);
@@ -129,6 +143,13 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 //        processIntentAction(getIntent());
 //        getSupportActionBar().hide();
 
+    }
+
+    private void updateSettings() {
+        // Restore settings for trusted contact and emergency message
+        settings = getSharedPreferences(PREFS_NAME, 0);
+        trustedNumber = settings.getString("trustedNumber", defaultTrustedNumber);
+        emergencyMessage = settings.getString("emergencyMessage", defaultEmergencyMessage);
     }
 
     public void initializeViews() { //GUI Init
@@ -235,7 +256,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
             public void onTick(long millisUntilFinished) {
                 // Ask user if he/she is okay
-                showActionButtonsNotification();
+                //showActionButtonsNotification();
 
                 // If answer, cancel timer
                 cancel();
@@ -243,9 +264,19 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
             public void onFinish() {
                 // Send SMS if no answers
+                sendSMS(trustedNumber, emergencyMessage);
             }
         }.start();
 
+    }
+
+    public void sendSMS(String phoneNumber, String message)
+    {
+        updateSettings();
+        PendingIntent pi = PendingIntent.getActivity(this, 0,
+                new Intent(this, SMS.class), 0);
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, pi, null);
     }
 
     private Intent getNotificationIntent() {
