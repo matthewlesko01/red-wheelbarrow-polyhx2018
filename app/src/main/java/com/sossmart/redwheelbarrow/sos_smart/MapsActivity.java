@@ -44,7 +44,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Update GPS location
         myGPS.getCurrentLocation();
         // Add a marker to local Position and move the camera
-        LatLng currentPosition = new LatLng(myGPS.latitude, myGPS.longitude);
+        //LatLng currentPosition = new LatLng(myGPS.latitude, myGPS.longitude);
+        LatLng currentPosition = new LatLng(45.516059399999996, -73.60461889999999);
         mMap.addMarker(new MarkerOptions().position(currentPosition).title("Crashed here"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(currentPosition));
     }
