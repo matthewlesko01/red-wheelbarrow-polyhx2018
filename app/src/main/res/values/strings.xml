@@ -4,4 +4,5 @@
     <string name="yes">I am alive!</string>
     <string name="maybe">I am alright but I need help</string>
     <string name="no">No I am dying...</string>
+    <string name="title_activity_maps">Map</string>
 </resources>
