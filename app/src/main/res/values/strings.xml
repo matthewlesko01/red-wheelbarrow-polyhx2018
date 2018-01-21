@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">SOS_Smart</string>
+    <string name="title_activity_sms">SMS</string>
 </resources>

@@ -1,19 +1,22 @@
 package com.sossmart.redwheelbarrow.sos_smart;
 
-import android.graphics.Color;
-import android.os.CountDownTimer;
-import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.app.Activity;
+import android.Manifest;
 import android.content.Context;
-import android.widget.Button;
-import android.widget.TextView;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-
-import org.w3c.dom.Text;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.support.v4.app.ActivityCompat;
+import android.support.v7.app.AppCompatActivity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 
 public class MainActivity extends AppCompatActivity  implements SensorEventListener{
@@ -44,6 +47,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     private TextView accelMag, impactG;
 
     Button btn;
+    private Button smsButton;
 
 
 
@@ -63,6 +67,42 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             //vibrateThreshold = accelerometer.getMaximumRange() / 2;
         } else {
             // fail! we dont have an accelerometer!
+        }
+
+        // Ask for permission to send and receive sms
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS}, 1);
+
+        // This is for the button to change to the SMS activity
+        smsButton = (Button) findViewById(R.id.smsButton);
+
+        // Capture button clicks
+        smsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent smsIntent = new Intent(MainActivity.this, SMS.class);
+                startActivity(smsIntent);
+            }
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                    Toast.makeText(MainActivity.this, "Permission denied to send SMS messages", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
         }
     }
 
