@@ -17,17 +17,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
-import android.support.v4.app.NotificationCompat.Action;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.NotificationCompat;
-import android.widget.Toast;
-
-import org.w3c.dom.Text;
 
 
 public class MainActivity extends AppCompatActivity  implements SensorEventListener{
@@ -61,13 +50,7 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
     Button btn;
     private Button smsButton;
 
-    // Notification parameters
-    private static final int NOTIFY_ID = 100;
-    private static final String YES_ACTION = "com.sossmart.redwheelbarrow.sos_smart.YES_ACTION";
-    private static final String MAYBE_ACTION = "com.sossmart.redwheelbarrow.sos_smart.MAYBE_ACTION";
-    private static final String NO_ACTION = "com.sossmart.redwheelbarrow.sos_smart.NO_ACTION";
-
-    private NotificationManager notificationManager;
+    private NotificationDecision notificationDecision;
 
 
     @Override
@@ -102,6 +85,9 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                 startActivity(smsIntent);
             }
         });
+
+
+        notificationDecision = new NotificationDecision();
     }
 
     @Override
@@ -123,11 +109,6 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
                 return;
             }
         }
-
-//        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-//
-//        processIntentAction(getIntent());
-//        getSupportActionBar().hide();
 
     }
 
@@ -235,81 +216,21 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
 
             public void onTick(long millisUntilFinished) {
                 // Ask user if he/she is okay
-                showActionButtonsNotification();
-
+                notificationDecision.showActionButtonsNotification();
+                showToast("Count down..." + millisUntilFinished);
                 // If answer, cancel timer
-                cancel();
+                //cancel();
             }
 
             public void onFinish() {
                 // Send SMS if no answers
+                showToast("BOOOOM!");
             }
         }.start();
 
     }
 
-    private Intent getNotificationIntent() {
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        return intent;
-    }
 
-    private void showActionButtonsNotification() {
-        Intent yesIntent = getNotificationIntent();
-        yesIntent.setAction(YES_ACTION);
-
-        Intent maybeIntent = getNotificationIntent();
-        maybeIntent.setAction(MAYBE_ACTION);
-
-        Intent noIntent = getNotificationIntent();
-        noIntent.setAction(NO_ACTION);
-
-        Notification notification = new NotificationCompat.Builder(this)
-                .setContentIntent(PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT))
-                .setSmallIcon(R.mipmap.ic_launcher)
-                .setTicker("Action Buttons Notification Received")
-                .setContentTitle("Hi there!")
-                .setContentText("This is even more text.")
-                .setWhen(System.currentTimeMillis())
-                .setAutoCancel(true)
-                .addAction(new Action(
-                        R.mipmap.ic_thumb_up_black_36dp,
-                        getString(R.string.yes),
-                        PendingIntent.getActivity(this, 0, yesIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
-                .addAction(new Action(
-                        R.mipmap.ic_thumbs_up_down_black_36dp,
-                        getString(R.string.maybe),
-                        PendingIntent.getActivity(this, 0, maybeIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
-                .addAction(new Action(
-                        R.mipmap.ic_thumb_down_black_36dp,
-                        getString(R.string.no),
-                        PendingIntent.getActivity(this, 0, noIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
-                .build();
-
-        notificationManager.notify(NOTIFY_ID, notification);
-    }
-
-    @Override
-    protected void onNewIntent(Intent intent) {
-        processIntentAction(intent);
-        super.onNewIntent(intent);
-    }
-
-    private void processIntentAction(Intent intent) {
-        if (intent.getAction() != null) {
-            switch (intent.getAction()) {
-                case YES_ACTION:
-                    Toast.makeText(this, "Yes :)", Toast.LENGTH_SHORT).show();
-                    break;
-                case MAYBE_ACTION:
-                    Toast.makeText(this, "Maybe :|", Toast.LENGTH_SHORT).show();
-                    break;
-                case NO_ACTION:
-                    Toast.makeText(this, "No :(", Toast.LENGTH_SHORT).show();
-                    break;
-            }
-        }
-    }
 
     // Clean display values
     public void displayCleanValues() {
@@ -345,5 +266,14 @@ public class MainActivity extends AppCompatActivity  implements SensorEventListe
             deltaZMax = deltaZ;
             maxZ.setText(Float.toString(deltaZMax));
         }
+    }
+
+    // Utility toast function cuz why not
+    public void showToast(final String msg) {
+        runOnUiThread(new Runnable() {
+            public void run() {
+                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
