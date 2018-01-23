@@ -160,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private void updateSettings() {
         // Restore settings for trusted contact and emergency message
         settings = getSharedPreferences(PREFS_NAME, 0);
-        trustedNumber = settings.getString("trustedNumber", defaultTrustedNumber);
+        trustedNumber = settings.getString("trustedContact", defaultTrustedNumber);
         emergencyMessage = settings.getString("emergencyMessage", defaultEmergencyMessage);
     }
 
