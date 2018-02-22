@@ -1,2 +1,4 @@
 # red-wheelbarrow-polyhx2018
-SOS Smart Automatic Car Crash Application
+SOS Smart - Car Crash Automatic Emergency SOS Messaging System
+
+By: Matthew Lesko-Krleza, Romain Nith, Banaru Ion
