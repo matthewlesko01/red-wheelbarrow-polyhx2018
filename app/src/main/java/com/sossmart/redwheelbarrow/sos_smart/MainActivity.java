@@ -1,6 +1,7 @@
 package com.sossmart.redwheelbarrow.sos_smart;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -13,20 +14,20 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.SmsManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.location.LocationManager;
+import android.app.Notification.Builder;
 
-import java.io.FileOutputStream;
+
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor accelerometer;
 
     private float attractionForce = (float) 9.82; // Earth's Attraction Force
-    private int thresholdG = 8;
+    private int thresholdG = 4;
 
     private float deltaXMax = 0;
     private float deltaYMax = 0;
@@ -60,12 +61,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     Button btn;
     private Button smsButton;
 
-    //private NotificationDecision notificationDecision;
+    //private NotificationDecision notificationDecision;0
 
     private static final int NOTIFY_ID = 100;
-    private static final String YES_ACTION = "com.sossmart.redwheelbarrow.sos_smart.YES_ACTION";
-    private static final String MAYBE_ACTION = "com.sossmart.redwheelbarrow.sos_smart.MAYBE_ACTION";
-    private static final String NO_ACTION = "com.sossmart.redwheelbarrow.sos_smart.NO_ACTION";
+    private static final String YES_ACTION = "com.example.demo.ads.YES_ACTION";
+    private static final String MAYBE_ACTION = "com.example.demo.ads.MAYBE_ACTION";
+    private static final String NO_ACTION = "com.example.demo.ads.NO_ACTION";
 
     private NotificationManager notificationManager;
 
@@ -73,15 +74,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int timeRemaining = 0;
 
     // Shared Preferences Settings
-    public static final String PREFS_NAME = "EmergencySettings";
-    private final String defaultTrustedNumber = "5148315762";
-    private final String defaultEmergencyMessage = "HELP! I just got into a car crash!";
+    public static final String PREFS_NAME = "Abhishek";
+    private final String defaultTrustedNumber = "8521185821";
+    private final String defaultEmergencyMessage = "Crash Detected";
     private static String trustedNumber;
     private static String emergencyMessage;
     private static SharedPreferences settings;
     private static Button mapsButton;
 
-    // GPS Location Variables
     private GPSService myGPS;
     public double longitude = 0;
     public double latitude = 0;
@@ -95,29 +95,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         if (sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null) {
-            // success! we have an accelerometer
 
             accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-            //vibrateThreshold = accelerometer.getMaximumRange() / 2;
         } else {
-            // fail! we dont have an accelerometer!
+
         }
 
         myGPS = new GPSService();
-
-
-        // Ask for permission to send and receive sms and access location
+        
         ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.SEND_SMS, Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
-        // Restore settings for trusted contact and emergency message
         updateSettings();
 
-        // This is for the button to change to the SMS activity
         smsButton = (Button) findViewById(R.id.smsButton);
         mapsButton = (Button) findViewById(R.id.mapsButton);
 
-        // Capture button clicks
         smsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -133,9 +126,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
-
-        //notificationDecision = new NotificationDecision();
-
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         processIntentAction(getIntent());
@@ -146,7 +136,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         switch (requestCode) {
             case 1: {
-                // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 } else {
@@ -158,13 +147,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     private void updateSettings() {
-        // Restore settings for trusted contact and emergency message
         settings = getSharedPreferences(PREFS_NAME, 0);
         trustedNumber = settings.getString("trustedContact", defaultTrustedNumber);
         emergencyMessage = settings.getString("emergencyMessage", defaultEmergencyMessage);
     }
 
-    public void initializeViews() { //GUI Init
+    public void initializeViews() {
         accelMag = (TextView) findViewById(R.id.accel_mag_text);
         impactG = (TextView) findViewById(R.id.impact_g_text);
 
@@ -176,16 +164,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         maxY = (TextView) findViewById(R.id.maxY);
         maxZ = (TextView) findViewById(R.id.maxZ);
 
-        btn = (Button) findViewById(R.id.bigRedBanner);
+        btn = (Button) findViewById(R.id.blue);
     }
 
-    //onResume() register the accelerometer for listening the events
     protected void onResume() {
         super.onResume();
         sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
-    //onPause() unregister the accelerometer for stop listening the events
     protected void onPause() {
         super.onPause();
         sensorManager.unregisterListener(this);
@@ -193,48 +179,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        // clean current values
         displayCleanValues();
-        // display the current x,y,z accelerometer values
         displayCurrentValues();
-        // display the max x,y,z accelerometer values
         displayMaxValues();
 
-        // get the change of the x,y,z values of the accelerometer
         deltaX = Math.abs(lastX - sensorEvent.values[0]);
         deltaY = Math.abs(lastY - sensorEvent.values[1]);
         deltaZ = Math.abs(lastZ - sensorEvent.values[2]);
 
-        // alpha is calculated as t / (t + dT)
-        // with t, the low-pass filter's time-constant
-        // and dT, the event delivery rate
-
         final float alpha = (float) 0.8;
         float[] gravity = new float[3];
 
-//        gravity[0] = alpha * gravity[0] + (1 - alpha) * sensorEvent.values[0];
-//        gravity[1] = alpha * gravity[1] + (1 - alpha) * sensorEvent.values[1];
-//        gravity[2] = alpha * gravity[2] + (1 - alpha) * sensorEvent.values[2];
-//
-//        deltaX = sensorEvent.values[0] - gravity[0];
-//        deltaY = sensorEvent.values[1] - gravity[1];
-//        deltaZ = sensorEvent.values[2] - gravity[2];
-//
-//        deltaX = (lastX - sensorEvent.values[0]);
-//        deltaY = (lastY - sensorEvent.values[1]);
-//        deltaZ = (lastZ - sensorEvent.values[2]);
 
         deltaAccelMag = (float) Math.sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
         deltaImpactG = deltaAccelMag / attractionForce;
 
-        // if the change is below 2, it is just plain noise
-//        if (deltaX < 2)
-//            deltaX = 0;
-//        if (deltaY < 2)
-//            deltaY = 0;
-//        if (deltaZ  vibrateThreshold) || (deltaY > vibrateThreshold) || (deltaZ > vibrateThreshold)) {
-//            v.vibrate(50);
-//        }
 
         decelerationVelocity = previousDeltaAccelMag - deltaAccelMag;
         if (Math.abs(decelerationVelocity) < 1 && decelerationVelocity < 0) {
@@ -242,14 +201,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         // In an event of a crash:
-        if (deltaImpactG > thresholdG && deceleration == true) { // If G is above threshold and in deceleration
+        if (deltaImpactG > thresholdG && deceleration == true) {
 
-            btn.setBackgroundColor(Color.GREEN); // Troubleshooting purposes
+            btn.setBackgroundColor(Color.GREEN);
 
-            // Start timer
-            timerNotification(); // Send SMS if time runs out without any user interactions
+            timerNotification();
 
-            // Resets deceleration
             deceleration = false;
         }
 
@@ -264,16 +221,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void timerNotification() {
 
-        new CountDownTimer(30000, 1000) {  // Counting down to 30 000ms with intervals of 1 000ms
+        new CountDownTimer(15000, 1000) {
 
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
             public void onTick(long millisUntilFinished) {
-                // Ask user if he/she is okay
-                //notificationDecision.showActionButtonsNotification();
-                //showToast("Count down..." + millisUntilFinished);
                 timeRemaining = (int) millisUntilFinished / 1000;
                 showActionButtonsNotification(timeRemaining);
 
-                // If answer, cancel timer
                 if (cancelTime) {
                     notificationManager.cancel(100);
                     cancel();
@@ -281,9 +235,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
 
             public void onFinish() {
-                // Send SMS if no answers
-                //showToast("BOOOOM!");
-                //getCurrentLocation();
                 sendSMS(trustedNumber, emergencyMessage);
             }
         }.start();
@@ -294,6 +245,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     public void sendSMS(String phoneNumber, String message) {
         updateSettings();
+        message = new StringBuilder().append(message).append(" \n https://anonymouspk7.github.io/").toString();
         PendingIntent pi = PendingIntent.getActivity(this, 0,
                 new Intent(this, MainActivity.class), 0);
         SmsManager sms = SmsManager.getDefault();
@@ -306,6 +258,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return intent;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void showActionButtonsNotification(int timeRemaining) {
         Intent yesIntent = getNotificationIntent();
         yesIntent.setAction(YES_ACTION);
@@ -316,8 +269,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Intent noIntent = getNotificationIntent();
         noIntent.setAction(NO_ACTION);
 
-        Notification mBuilder =
-                new NotificationCompat.Builder(MainActivity.this)
+        @SuppressLint("WrongConstant") Notification mBuilder =
+                new Notification.Builder(MainActivity.this)
                         .setContentIntent(PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT))
                         .setSmallIcon(R.mipmap.ic_launcher)
                         .setTicker("Action Buttons Notification Received")
@@ -328,18 +281,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         .setVisibility(1) // 1 = public
                         .setAutoCancel(true)
                         .setFullScreenIntent(PendingIntent.getActivity(this, 0, getNotificationIntent(), PendingIntent.FLAG_UPDATE_CURRENT), true)
-                        .addAction(new NotificationCompat.Action(
+                        .addAction(new Notification.Action(
                                 R.mipmap.ic_thumb_up_black_36dp,
                                 getString(R.string.yes),
                                 PendingIntent.getActivity(this, 0, yesIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
-//                        .addAction(new NotificationCompat.Action(
-//                                R.mipmap.ic_thumbs_up_down_black_36dp,
-//                                getString(R.string.maybe),
-//                                PendingIntent.getActivity(this, 0, maybeIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
-//                        .addAction(new NotificationCompat.Action(
-//                                R.mipmap.ic_thumb_down_black_36dp,
-//                                getString(R.string.no),
-//                                PendingIntent.getActivity(this, 0, noIntent, PendingIntent.FLAG_UPDATE_CURRENT)))
                         .build();
 
         notificationManager.notify(NOTIFY_ID, mBuilder);
@@ -355,7 +300,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (intent.getAction() != null) {
             switch (intent.getAction()) {
                 case YES_ACTION:
-                    //Toast.makeText(this, "Yes :)", Toast.LENGTH_SHORT).show();
                     cancelTime = true;
                     break;
                 case MAYBE_ACTION:
@@ -370,7 +314,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
     }
 
-    // Clean display values
     public void displayCleanValues() {
         accelMag.setText("0.0");
         impactG.setText("0.0");
@@ -404,14 +347,5 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             deltaZMax = deltaZ;
             maxZ.setText(Float.toString(deltaZMax));
         }
-    }
-
-    // Utility toast function cuz why not
-    public void showToast(final String msg) {
-        runOnUiThread(new Runnable() {
-            public void run() {
-                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
-            }
-        });
     }
 }
